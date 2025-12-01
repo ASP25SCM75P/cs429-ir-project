@@ -5,11 +5,11 @@
 A **COMPLETE, TESTED, WORKING** IR system that you can run right now!
 
 ### Features
-Simple crawler (no Scrapy complexity!)
+Simple crawler
 TF-IDF indexer with scikit-learn
 Flask query processor
 Complete documentation
-Ready to submit
+
 
 ---
 
@@ -48,14 +48,14 @@ queries/ (output)
 
 ---
 
-## 🎯 Quick Start (15 Minutes!)
+## 🎯 Quick Start
 
-### Step 1: Install Dependencies (2 min)
+### Step 1: Install Dependencies
 ```bash
 pip install requests beautifulsoup4 scikit-learn flask numpy lxml
 ```
 
-### Step 2: Run Crawler (5-10 min)
+### Step 2: Run Crawler
 ```bash
 cd crawler
 python3 simple_crawler.py
@@ -63,7 +63,7 @@ python3 simple_crawler.py
 
 **Output:** 50 HTML files in `../html/`
 
-### Step 3: Build Index (2-3 min)
+### Step 3: Build Index
 ```bash
 cd ../indexer
 python3 build_index.py
@@ -71,7 +71,7 @@ python3 build_index.py
 
 **Output:** Index files created in current directory
 
-### Step 4: Process Queries (1 min)
+### Step 4: Process Queries
 ```bash
 cd ../processor
 python3 query_processor.py batch
