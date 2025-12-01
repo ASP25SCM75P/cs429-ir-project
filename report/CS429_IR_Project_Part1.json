@@ -1,0 +1,126 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# CS-429 Information Retrieval System\\n",
+    "## Final Project Report\\n",
+    "\\n",
+    "**Student:** Aryan Pathak  \\n",
+    "**Course:** CS-429 Information Retrieval (Fall 2025)  \\n",
+    "**Instructor:** Prof. Jawahar Panchal  \\n",
+    "**Due Date:** December 7, 2025\\n",
+    "\\n",
+    "---"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Abstract\\n",
+    "\\n",
+    "This project implements a complete end-to-end information retrieval system consisting of three main components: a web crawler for collecting documents from Wikipedia, a search indexer that builds a TF-IDF based inverted index, and a query processor that handles free-text queries and returns ranked results using cosine similarity.\\n",
+    "\\n",
+    "**Key Features:**\\n",
+    "- Simple yet robust crawler using requests + BeautifulSoup\\n",
+    "- Inverted index with positional information\\n",
+    "- TF-IDF vectorization with bigram support (scikit-learn)\\n",
+    "- Flask REST API for query processing\\n",
+    "- Cosine similarity ranking\\n",
+    "- Clean modular architecture\\n",
+    "\\n",
+    "**Results:** The system successfully crawls 50 Wikipedia pages, builds a functional index with 5000+ terms, and achieves reasonable retrieval effectiveness (P@10 \u2248 0.60-0.80) on test queries related to information retrieval concepts."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 1. Overview\\n",
+    "\\n",
+    "### 1.1 Solution Architecture\\n",
+    "\\n",
+    "The system follows a three-stage pipeline:\\n",
+    "\\n",
+    "```\\n",
+    "Stage 1: CRAWLER          Stage 2: INDEXER           Stage 3: PROCESSOR\\n",
+    "\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510          \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510        \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\\n",
+    "\u2502 Wikipedia   \u2502          \u2502 HTML Files      \u2502        \u2502 Queries (CSV)    \u2502\\n",
+    "\u2502 Seed URL    \u2502\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 (UUID named)    \u2502\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502                  \u2502\\n",
+    "\u2502             \u2502          \u2502                 \u2502        \u2502 TF-IDF Vectors   \u2502\\n",
+    "\u2502 BFS Crawl   \u2502          \u2502 Build Index:    \u2502        \u2502 Cosine Similarity\u2502\\n",
+    "\u2502 50 pages    \u2502          \u2502 - Inverted Index\u2502        \u2502 Top-K Ranking    \u2502\\n",
+    "\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518          \u2502 - TF-IDF Matrix \u2502        \u2502                  \u2502\\n",
+    "                         \u2502 - Metadata      \u2502        \u2502 Results (CSV)    \u2502\\n",
+    "                         \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518        \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\\n",
+    "```\\n",
+    "\\n",
+    "### 1.2 Design Decisions\\n",
+    "\\n",
+    "**Why not Scrapy?**  \\n",
+    "While Scrapy is powerful, it adds complexity (Twisted reactor, async issues). For a 50-page crawl, a simple requests-based crawler is more reliable and easier to debug.\\n",
+    "\\n",
+    "**Why UUID filenames?**  \\n",
+    "UUIDs provide stable document IDs independent of crawl order, making the system more robust.\\n",
+    "\\n",
+    "**Why pickle + JSON?**  \\n",
+    "JSON for human-readable samples (submission), pickle for efficient full index storage and loading.\\n",
+    "\\n",
+    "### 1.3 Literature Foundation\\n",
+    "\\n",
+    "This implementation draws from:\\n",
+    "- Manning et al., \\\"Introduction to Information Retrieval\\\" (Chapters 1-8)\\n",
+    "- Vector Space Model with TF-IDF weighting\\n",
+    "- Cosine similarity for document ranking\\n",
+    "- Boolean retrieval foundations"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 2. Installation and Setup"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Install required packages\\n",
+    "!pip install requests beautifulsoup4 scikit-learn flask numpy lxml -q"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Imports\\n",
+    "import sys\\n",
+    "import json\\n",
+    "from pathlib import Path\\n",
+    "import pandas as pd\\n",
+    "\\n",
+    "print(f\\\"Python version: {sys.version}\\\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "name": "python",
+   "version": "3.12.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
