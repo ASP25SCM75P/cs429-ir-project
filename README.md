@@ -3,7 +3,7 @@
 ## Features
 
 -  Scrapy-based crawler
--  Synthetic HTML document generator
+-  Synthetic HTML document generator (Scrapy is included, but synthetic generation is used by default for reproducibility.)
 -  TF-IDF indexer with scikit-learn
 -  Cosine similarity query processor
 -  Full Jupyter Notebook report
